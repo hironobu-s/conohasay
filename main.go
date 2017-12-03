@@ -1,20 +1,20 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/urfave/cli"
 )
 
 const (
 	COWS_DIR = "cows"
-	MAXWIDTH = 50
 )
 
 var newline = "\n"
@@ -35,83 +35,94 @@ func main() {
 }
 
 func action(ctx *cli.Context) error {
-	message := strings.Join(ctx.Args(), " ")
+
 	aa, width, err := loadCow("conoha")
 	if err != nil {
 		return err
 	}
-	_ = width
-	message = formatMessage(message)
 
-	fmt.Fprintf(os.Stdout, "%s%s", message, aa)
+	message := readMessage(ctx)
+	message = formatMessage(message, width/2)
+
+	fmt.Fprintf(os.Stdout, message+aa)
 	return nil
 }
 
-func formatMessage(message string) string {
-	rb := bytes.NewBufferString(message)
-	ob := bytes.NewBufferString("")
-
-	width := MAXWIDTH
-	if rb.Len() < width {
-		width = rb.Len()
-	}
-
-	// header
-	ob.WriteString(" ")
-	ob.WriteString(strings.Repeat("_", width+2))
-	ob.WriteString("  ")
-	ob.WriteString(newline)
+func readMessage(ctx *cli.Context) string {
+	var input string
 
 	// body
-	first := true
-	for {
-		buf := rb.Next(width)
+	if ctx.NArg() > 0 {
+		input = strings.Join(ctx.Args(), " ")
 
-		format := "%-" + strconv.Itoa(width) + "s"
-		line := fmt.Sprintf(format, string(buf))
+	} else {
+		sc := bufio.NewScanner(os.Stdin)
+		sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+			if atEOF && len(data) == 0 {
+				return 0, nil, nil
+			}
+			return len(data), data, nil
+		})
 
-		if first && rb.Len() == 0 {
-			// There is only one row in the message.
-			ob.WriteString("< ")
-			ob.WriteString(line)
-			ob.WriteString(` >`)
-			ob.WriteString(newline)
+		sc.Scan()
+		input = sc.Text()
+	}
+	return strings.Trim(input, "\r\n \t")
+}
+
+func formatMessage(input string, maxWrapsize int) string {
+	rows := strings.Split(input, "\n")
+
+	// calculate wrapsize
+	wrapsize := 0
+	for _, line := range rows {
+		s := runewidth.StringWidth(line)
+		if s > maxWrapsize {
+			wrapsize = maxWrapsize
 			break
-
-		} else if first {
-			ob.WriteString("/ ")
-			ob.WriteString(line)
-			ob.WriteString(` \`)
-			ob.WriteString(newline)
-			first = false
-
-		} else if rb.Len() == 0 {
-			ob.WriteString(`\ `)
-			ob.WriteString(line)
-			ob.WriteString(" /")
-			ob.WriteString(newline)
-			break
-
-		} else {
-			ob.WriteString("| ")
-			ob.WriteString(line)
-			ob.WriteString(" |")
-			ob.WriteString(newline)
+		} else if s > wrapsize {
+			wrapsize = s
 		}
 	}
 
+	if wrapsize == maxWrapsize {
+		tmp := make([]string, 0, len(rows)*2)
+		for _, line := range rows {
+			wrapped := strings.Split(runewidth.Wrap(line, maxWrapsize), "\n")
+			tmp = append(tmp, wrapped...)
+		}
+		rows = tmp
+	}
+
+	buf := bytes.NewBuffer(make([]byte, 0, len(input)*2))
+
+	// header
+	buf.WriteString(" " + strings.Repeat("_", wrapsize+2) + " " + newline)
+
+	// message
+	l := len(rows)
+	for i, line := range rows {
+		line = strings.Trim(line, "\r\n\t")
+		line = strings.Replace(line, "\t", "", -1)
+
+		if i == 0 && l == 1 {
+			line = "< " + runewidth.FillRight(line, wrapsize) + ` >`
+		} else if i == 0 {
+			line = "/ " + runewidth.FillRight(line, wrapsize) + ` \`
+		} else if i == l-1 {
+			line = `\ ` + runewidth.FillRight(line, wrapsize) + " /"
+		} else {
+			line = "| " + runewidth.FillRight(line, wrapsize) + " |"
+		}
+		buf.WriteString(line + "\n")
+	}
+
 	// footer
-	ob.WriteString(" ")
-	ob.WriteString(strings.Repeat("-", width+2))
-	ob.WriteString(" ")
-	ob.WriteString(newline)
+	buf.WriteString(" " + strings.Repeat("-", wrapsize+2) + " " + newline)
+	buf.WriteString(`    \` + newline)
+	buf.WriteString(`     \` + newline)
 
-	ob.WriteString(`    \`)
-	ob.WriteString(newline)
-	ob.WriteString(`     \`)
-	ob.WriteString(newline)
-
-	return ob.String()
+	return buf.String()
 }
 
 func loadCow(name string) (aa string, width int, err error) {

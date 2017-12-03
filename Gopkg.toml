@@ -1,2 +1,5 @@
 [[constraint]]
 name = "github.com/urfave/cli"
+
+[[constraint]]
+name = "github.com/mattn/go-runewidth"

@@ -61,16 +61,21 @@ func readMessage(ctx *cli.Context) string {
 		input = strings.Join(ctx.Args(), " ")
 
 	} else {
-		sc := bufio.NewScanner(os.Stdin)
-		sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
-			if atEOF && len(data) == 0 {
-				return 0, nil, nil
-			}
-			return len(data), data, nil
-		})
+		for {
+			sc := bufio.NewScanner(os.Stdin)
+			sc.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+				if atEOF && len(data) == 0 {
+					return 0, nil, nil
+				}
+				return len(data), data, nil
+			})
 
-		sc.Scan()
-		input = sc.Text()
+			sc.Scan()
+			input = strings.Trim(sc.Text(), newline)
+			if input != "" {
+				break
+			}
+		}
 	}
 	return strings.Trim(input, "\r\n \t")
 }

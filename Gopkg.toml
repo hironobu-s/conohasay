@@ -3,3 +3,6 @@ name = "github.com/urfave/cli"
 
 [[constraint]]
 name = "github.com/mattn/go-runewidth"
+[[constraint]]
+  branch = "master"
+  name = "github.com/jessevdk/go-assets"

@@ -6,15 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mattn/go-runewidth"
 	"github.com/urfave/cli"
-)
-
-const (
-	COWS_DIR = "cows"
 )
 
 var newline = "\n"
@@ -26,8 +21,19 @@ func main() {
 	app.Description = app.Name
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
-			Name:  "testflag,t",
-			Usage: "test flags",
+			Name:  "cowfile,f",
+			Usage: "Load a charaster picture from a file.",
+		},
+		cli.StringFlag{
+			Name:  "mikumo,m",
+			Usage: "Specifies a particular character to use.",
+			Value: "conoha",
+		},
+
+		cli.StringFlag{
+			Name:  "size,s",
+			Usage: "Specifies a size of picture.",
+			Value: "s",
 		},
 	}
 	app.Action = action
@@ -35,8 +41,7 @@ func main() {
 }
 
 func action(ctx *cli.Context) error {
-
-	aa, width, err := loadCow("conoha")
+	aa, width, err := loadCow(ctx)
 	if err != nil {
 		return err
 	}
@@ -125,16 +130,31 @@ func formatMessage(input string, maxWrapsize int) string {
 	return buf.String()
 }
 
-func loadCow(name string) (aa string, width int, err error) {
-	p := filepath.Join(COWS_DIR, name+".cow")
-	data, err := ioutil.ReadFile(p)
+func loadCow(ctx *cli.Context) (aa string, width int, err error) {
+	name := ctx.String("mikumo")
+	if name != "conoha" && name != "anzu" && name != "logo" {
+		return aa, width, fmt.Errorf("Undefined character name. [%s]", name)
+	}
+
+	size := ctx.String("size")
+	if size != "s" && size != "m" && size != "l" {
+		return aa, width, fmt.Errorf("Undefined image size. [%s]", name)
+	}
+
+	//pp.Printf("%v\n", Assets.Files)
+	file := name + "-" + size + ".cow"
+	f, err := Assets.Open(file)
 	if err != nil {
-		goto RET
+		return aa, width, fmt.Errorf("Could not load the character. [%s]", file)
+	}
+
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return aa, width, err
 	}
 
 	aa = string(data)
 	width = strings.Index(aa, "\n")
 
-RET:
-	return aa, width, err
+	return aa, width, nil
 }

@@ -29,12 +29,10 @@ func listCows() []string {
 	return list
 }
 
-func conohasay(cow *Cow, input string, wrapcolumn int) (output string, err error) {
-	rows := strings.Split(input, "\n")
-
+func conohasay(cow *Cow, msg Message, wrapcolumn int) (output string, err error) {
 	// calculate wrapsize
 	lw := 0 // line width
-	for _, line := range rows {
+	for _, line := range msg {
 		l := runewidth.StringWidth(line)
 		if l > lw {
 			lw = l
@@ -42,23 +40,60 @@ func conohasay(cow *Cow, input string, wrapcolumn int) (output string, err error
 	}
 
 	if wrapcolumn <= lw {
-		tmp := make([]string, 0, len(rows)*2)
-		for _, line := range rows {
+		tmp := make([]string, 0, len(msg)*2)
+		for _, line := range msg {
 			wrapped := strings.Split(runewidth.Wrap(line, wrapcolumn), "\n")
 			tmp = append(tmp, wrapped...)
 		}
-		rows = tmp
+		msg = tmp
 
 	} else {
 		wrapcolumn = lw
 	}
 
-	// Wrap the message
-	buf := bytes.NewBuffer(make([]byte, 0, len(input)*2))
-	buf.WriteString(" " + strings.Repeat("_", wrapcolumn+2) + " " + newline)
+	return wrap2(msg, cow, wrapcolumn), nil
+}
 
-	l := len(rows)
-	for i, line := range rows {
+func wrap2(msg Message, cow *Cow, wrapcolumn int) string {
+	// wrap message
+	balloon := balloonText(msg, wrapcolumn, "left")
+
+	// height
+	overlap := len(balloon) - cow.Height()/2
+	height := len(balloon) + cow.Height()/2
+
+	buf := bytes.NewBuffer(make([]byte, 0, len(strings.Join(msg, ""))+cow.ArtSize))
+
+	mi := 0
+	ci := 0
+	for i := 0; i < height; i++ {
+		if mi >= overlap {
+			if ci < len(cow.Art[ci]) {
+				buf.WriteString(cow.Art[ci])
+				ci++
+			}
+		} else {
+			buf.WriteString(strings.Repeat(" ", cow.Width()))
+		}
+
+		if mi < len(balloon) {
+			buf.WriteString(balloon[mi])
+			mi++
+		}
+		buf.WriteString("\n")
+	}
+	return buf.String()
+}
+
+func balloonText(msg Message, wrapcolumn int, way string) []string {
+	l := len(msg)
+	buf := make([]string, l+5)
+	p := 0
+
+	buf[p] = " " + strings.Repeat("_", wrapcolumn+2) + " "
+	p++
+
+	for i, line := range msg {
 		line = strings.Trim(line, "\r\n\t")
 		line = strings.Replace(line, "\t", "", -1)
 
@@ -71,27 +106,60 @@ func conohasay(cow *Cow, input string, wrapcolumn int) (output string, err error
 		} else {
 			line = "| " + runewidth.FillRight(line, wrapcolumn) + " |"
 		}
-		buf.WriteString(line + "\n")
-	}
-	buf.WriteString(" " + strings.Repeat("-", wrapcolumn+2) + " " + newline)
-
-	// Append the terminal art after the message
-	buf.WriteString(`    \  ` + "\n")
-	for i, line := range strings.Split(cow.Art, "\n") {
-		if i == 0 {
-			buf.WriteString(`     \ ` + line + "\n")
-		} else {
-			buf.WriteString(`       ` + line + "\n")
-		}
+		buf[p] = line
+		p++
 	}
 
-	return buf.String(), nil
+	buf[p] = " " + strings.Repeat("-", wrapcolumn+2)
+	if way == "left" {
+		buf[p+1] = `   /`
+		buf[p+2] = `  / `
+	} else {
+		buf[p+1] = `     \`
+		buf[p+2] = `      \`
+	}
+	buf[p+3] = ``
+	return buf
+}
+
+func wrap1(msg Message, cow *Cow, wrapcolumn int) string {
+	buf := bytes.NewBuffer(make([]byte, 0, len(strings.Join(msg, ""))+cow.ArtSize))
+
+	balloon := balloonText(msg, wrapcolumn, "right")
+	buf.WriteString(strings.Join(balloon, "\n"))
+	buf.WriteString("\n")
+	buf.WriteString(strings.Join(cow.Art, "\n"))
+
+	return buf.String()
 }
 
 type Cow struct {
-	Name string
-	Size string
-	Art  string //TerminalArt
+	Name    string
+	Size    string
+	Art     []string // TerminalArt
+	ArtSize int
+
+	// cache
+	width int
+}
+
+// Width return the length of the terminal art
+func (c *Cow) Width() int {
+	if c.width == 0 {
+		for _, line := range c.Art {
+			// "[38" is ansi escape command(set forground color).
+			cc := strings.Count(line, "[38") + strings.Count(line, " ")
+			if c.width < cc {
+				c.width = cc
+			}
+		}
+	}
+	return c.width
+}
+
+// Height return the count of lines
+func (c *Cow) Height() int {
+	return len(c.Art)
 }
 
 func loadCow(name string, size string) (cow *Cow, err error) {
@@ -107,9 +175,10 @@ func loadCow(name string, size string) (cow *Cow, err error) {
 	}
 
 	cow = &Cow{
-		Name: name,
-		Size: size,
-		Art:  string(data),
+		Name:    name,
+		Size:    size,
+		Art:     strings.Split(string(data), "\n"),
+		ArtSize: len(data),
 	}
 
 	return cow, nil

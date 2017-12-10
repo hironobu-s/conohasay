@@ -27,12 +27,16 @@ func main() {
 			Usage: "Specifies a particular character to use.",
 			Value: "conoha",
 		},
-
 		cli.StringFlag{
 			Name:  "size,s",
 			Usage: "Specifies a size of picture.",
 			Value: "s",
 		},
+		cli.BoolFlag{
+			Name:  "force-vertical,f",
+			Usage: "Force the vertical layout.",
+		},
+
 		cli.IntFlag{
 			Name:  "wrapcolumn, w",
 			Usage: "Specifies roughly where the message should be wrapped. Default is " + strconv.Itoa(DEFAULT_WRAPCOLUMN),
@@ -79,7 +83,10 @@ func action(ctx *cli.Context) error {
 	return nil
 }
 
-func scanMessage(ctx *cli.Context) string {
+// Message is something given by user
+type Message []string
+
+func scanMessage(ctx *cli.Context) Message {
 	var input string
 
 	if ctx.NArg() > 0 {
@@ -96,11 +103,13 @@ func scanMessage(ctx *cli.Context) string {
 			})
 
 			sc.Scan()
-			input = strings.Trim(sc.Text(), newline)
+			input = strings.Trim(sc.Text(), "\r\n")
 			if input != "" {
 				break
 			}
 		}
 	}
-	return strings.Trim(input, "\r\n \t")
+
+	input = strings.Trim(input, "\r\n \t")
+	return strings.Split(input, "\n")
 }

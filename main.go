@@ -4,12 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/urfave/cli"
 )
 
 var newline = "\n"
+
+const (
+	DEFAULT_WRAPCOLUMN = 40
+)
 
 func main() {
 	app := cli.NewApp()
@@ -27,6 +32,11 @@ func main() {
 			Name:  "size,s",
 			Usage: "Specifies a size of picture.",
 			Value: "s",
+		},
+		cli.IntFlag{
+			Name:  "wrapcolumn, w",
+			Usage: "Specifies roughly where the message should be wrapped. Default is " + strconv.Itoa(DEFAULT_WRAPCOLUMN),
+			Value: DEFAULT_WRAPCOLUMN,
 		},
 		cli.BoolFlag{
 			Name:  "list,l",
@@ -46,22 +56,32 @@ func action(ctx *cli.Context) error {
 		return nil
 	}
 
-	aa, width, err := loadCow(ctx)
+	name := ctx.String("mikumo")
+	size := ctx.String("size")
+	if size != "s" && size != "m" && size != "l" {
+		return fmt.Errorf(`Parameter size should be "l", "m" or "s".\n`)
+	}
+
+	message := scanMessage(ctx)
+
+	cow, err := loadCow(name, size)
 	if err != nil {
 		return err
 	}
 
-	message := scanMessage(ctx)
-	message = conohasay(message, width/2)
+	wrapcolumn := ctx.Int("wrapcolumn")
+	output, err := conohasay(cow, message, wrapcolumn)
+	if err != nil {
+		return err
+	}
 
-	fmt.Fprintf(os.Stdout, message+aa)
+	fmt.Fprintf(os.Stdout, output)
 	return nil
 }
 
 func scanMessage(ctx *cli.Context) string {
 	var input string
 
-	// body
 	if ctx.NArg() > 0 {
 		input = strings.Join(ctx.Args(), " ")
 

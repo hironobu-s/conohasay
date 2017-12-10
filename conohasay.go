@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	runewidth "github.com/mattn/go-runewidth"
-	"github.com/urfave/cli"
 )
 
 func listCows() []string {
@@ -30,85 +29,88 @@ func listCows() []string {
 	return list
 }
 
-func conohasay(input string, maxWrapsize int) string {
+func conohasay(cow *Cow, input string, wrapcolumn int) (output string, err error) {
 	rows := strings.Split(input, "\n")
 
 	// calculate wrapsize
-	wrapsize := 0
+	lw := 0 // line width
 	for _, line := range rows {
-		s := runewidth.StringWidth(line)
-		if s > maxWrapsize {
-			wrapsize = maxWrapsize
-			break
-		} else if s > wrapsize {
-			wrapsize = s
+		l := runewidth.StringWidth(line)
+		if l > lw {
+			lw = l
 		}
 	}
 
-	if wrapsize == maxWrapsize {
+	if wrapcolumn <= lw {
 		tmp := make([]string, 0, len(rows)*2)
 		for _, line := range rows {
-			wrapped := strings.Split(runewidth.Wrap(line, maxWrapsize), "\n")
+			wrapped := strings.Split(runewidth.Wrap(line, wrapcolumn), "\n")
 			tmp = append(tmp, wrapped...)
 		}
 		rows = tmp
+
+	} else {
+		wrapcolumn = lw
 	}
 
+	// Wrap the message
 	buf := bytes.NewBuffer(make([]byte, 0, len(input)*2))
+	buf.WriteString(" " + strings.Repeat("_", wrapcolumn+2) + " " + newline)
 
-	// header
-	buf.WriteString(" " + strings.Repeat("_", wrapsize+2) + " " + newline)
-
-	// message
 	l := len(rows)
 	for i, line := range rows {
 		line = strings.Trim(line, "\r\n\t")
 		line = strings.Replace(line, "\t", "", -1)
 
 		if i == 0 && l == 1 {
-			line = "< " + runewidth.FillRight(line, wrapsize) + ` >`
+			line = "< " + runewidth.FillRight(line, wrapcolumn) + ` >`
 		} else if i == 0 {
-			line = "/ " + runewidth.FillRight(line, wrapsize) + ` \`
+			line = "/ " + runewidth.FillRight(line, wrapcolumn) + ` \`
 		} else if i == l-1 {
-			line = `\ ` + runewidth.FillRight(line, wrapsize) + " /"
+			line = `\ ` + runewidth.FillRight(line, wrapcolumn) + " /"
 		} else {
-			line = "| " + runewidth.FillRight(line, wrapsize) + " |"
+			line = "| " + runewidth.FillRight(line, wrapcolumn) + " |"
 		}
 		buf.WriteString(line + "\n")
 	}
+	buf.WriteString(" " + strings.Repeat("-", wrapcolumn+2) + " " + newline)
 
-	// footer
-	buf.WriteString(" " + strings.Repeat("-", wrapsize+2) + " " + newline)
-	buf.WriteString(`    \` + newline)
-	buf.WriteString(`     \` + newline)
+	// Append the terminal art after the message
+	buf.WriteString(`    \  ` + "\n")
+	for i, line := range strings.Split(cow.Art, "\n") {
+		if i == 0 {
+			buf.WriteString(`     \ ` + line + "\n")
+		} else {
+			buf.WriteString(`       ` + line + "\n")
+		}
+	}
 
-	return buf.String()
+	return buf.String(), nil
 }
 
-func loadCow(ctx *cli.Context) (aa string, width int, err error) {
-	name := ctx.String("mikumo")
-	if name != "conoha" && name != "anzu" && name != "umemiya" && name != "logo" {
-		return aa, width, fmt.Errorf("Undefined character name. [%s]", name)
-	}
+type Cow struct {
+	Name string
+	Size string
+	Art  string //TerminalArt
+}
 
-	size := ctx.String("size")
-	if size != "s" && size != "m" && size != "l" {
-		return aa, width, fmt.Errorf("Undefined image size. [%s]", name)
-	}
-
+func loadCow(name string, size string) (cow *Cow, err error) {
 	file := name + "-" + size + ".cow"
 	f, err := Assets.Open(file)
 	if err != nil {
-		return aa, width, fmt.Errorf("Could not load the character. [name=%s, size=%s]", name, size)
+		return nil, fmt.Errorf("Could not load the character. [name=%s, size=%s]", name, size)
 	}
 
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		return aa, width, err
+		return nil, err
 	}
 
-	aa = string(data)
-	width = strings.Index(aa, "\n")
+	cow = &Cow{
+		Name: name,
+		Size: size,
+		Art:  string(data),
+	}
 
-	return aa, width, nil
+	return cow, nil
 }

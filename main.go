@@ -20,10 +20,6 @@ func main() {
 	app.Name = "conohasay"
 	app.Description = app.Name
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "cowfile,f",
-			Usage: "Load a charaster picture from a file.",
-		},
 		cli.StringFlag{
 			Name:  "mikumo,m",
 			Usage: "Specifies a particular character to use.",
@@ -35,12 +31,24 @@ func main() {
 			Usage: "Specifies a size of picture.",
 			Value: "s",
 		},
+		cli.BoolFlag{
+			Name:  "list,l",
+			Usage: "List all charaster names.",
+		},
 	}
 	app.Action = action
 	app.RunAndExitOnError()
 }
 
 func action(ctx *cli.Context) error {
+	if ctx.Bool("list") {
+		cows := listCows()
+		for _, cow := range cows {
+			fmt.Fprintf(os.Stdout, "%s\n", cow)
+		}
+		return nil
+	}
+
 	aa, width, err := loadCow(ctx)
 	if err != nil {
 		return err
@@ -137,7 +145,7 @@ func formatMessage(input string, maxWrapsize int) string {
 
 func loadCow(ctx *cli.Context) (aa string, width int, err error) {
 	name := ctx.String("mikumo")
-	if name != "conoha" && name != "anzu" && name != "logo" {
+	if name != "conoha" && name != "anzu" && name != "umemiya" && name != "logo" {
 		return aa, width, fmt.Errorf("Undefined character name. [%s]", name)
 	}
 
@@ -146,11 +154,10 @@ func loadCow(ctx *cli.Context) (aa string, width int, err error) {
 		return aa, width, fmt.Errorf("Undefined image size. [%s]", name)
 	}
 
-	//pp.Printf("%v\n", Assets.Files)
 	file := name + "-" + size + ".cow"
 	f, err := Assets.Open(file)
 	if err != nil {
-		return aa, width, fmt.Errorf("Could not load the character. [%s]", file)
+		return aa, width, fmt.Errorf("Could not load the character. [name=%s, size=%s]", name, size)
 	}
 
 	data, err := ioutil.ReadAll(f)

@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-
-	"bytes"
 
 	"github.com/urfave/cli"
 )
@@ -65,7 +64,7 @@ Usage: {{.Name}} [-flv] [-h] [-c name]
 		buf := bytes.NewBuffer(make([]byte, 0, len(templ)*2))
 		originalHelpPrinter(buf, templ, app)
 
-		cow, err := loadCow("conoha", "s")
+		cow, err := NewCow("conoha", "s")
 		if err != nil {
 			fmt.Fprintf(os.Stdout, buf.String())
 			return
@@ -100,14 +99,13 @@ func action(ctx *cli.Context) error {
 		return fmt.Errorf(`Parameter size should be "l", "m" or "s".\n`)
 	}
 
-	message := scanMessage(ctx)
-
-	cow, err := loadCow(name, size)
+	cow, err := NewCow(name, size)
 	if err != nil {
 		return err
 	}
 
 	wrapcolumn := ctx.Int("wrapcolumn")
+	message := scanMessage(ctx)
 	output, err := conohasay(cow, message, wrapcolumn)
 	if err != nil {
 		return err

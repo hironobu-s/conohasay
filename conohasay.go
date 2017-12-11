@@ -162,7 +162,8 @@ func (c *Cow) Height() int {
 	return len(c.Art)
 }
 
-func loadCow(name string, size string) (cow *Cow, err error) {
+// NewCow creates the struct of Cow
+func NewCow(name string, size string) (cow *Cow, err error) {
 	file := name + "-" + size + ".cow"
 	f, err := Assets.Open(file)
 	if err != nil {

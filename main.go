@@ -71,7 +71,7 @@ Usage: {{.Name}} [-flv] [-h] [-c name]
 		}
 
 		msg := strings.Split(buf.String(), "\n")
-		output, err := conohasay(cow, msg, 50)
+		output, err := Conohasay(cow, msg, 50)
 		if err != nil {
 			fmt.Fprintf(os.Stdout, buf.String())
 			return
@@ -86,7 +86,7 @@ Usage: {{.Name}} [-flv] [-h] [-c name]
 
 func action(ctx *cli.Context) error {
 	if ctx.Bool("list") {
-		cows := listCows()
+		cows := ListCows()
 		for _, cow := range cows {
 			fmt.Fprintf(os.Stdout, "%s\n", cow)
 		}
@@ -106,7 +106,7 @@ func action(ctx *cli.Context) error {
 
 	wrapcolumn := ctx.Int("wrapcolumn")
 	message := scanMessage(ctx)
-	output, err := conohasay(cow, message, wrapcolumn)
+	output, err := Conohasay(cow, message, wrapcolumn)
 	if err != nil {
 		return err
 	}

@@ -117,9 +117,6 @@ func action(ctx *cli.Context) error {
 	return nil
 }
 
-// Message is something given by user
-type Message []string
-
 func scanMessage(ctx *cli.Context) Message {
 	var input string
 

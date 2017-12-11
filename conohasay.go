@@ -21,6 +21,8 @@ func Conohasay(cow *Cow, msg Message, wrapcolumn int) (output string, err error)
 		wrapcolumn, _, err = terminal.GetSize(1)
 		if err != nil {
 			wrapcolumn = 40
+		} else {
+			wrapcolumn /= 2
 		}
 	}
 

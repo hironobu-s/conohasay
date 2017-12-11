@@ -54,7 +54,7 @@ func formatH(msg Message, cow *Cow, wrapcolumn int) string {
 func formatV(msg Message, cow *Cow, wrapcolumn int) string {
 	balloon := balloonText(msg, wrapcolumn, "left")
 
-	overlap := len(balloon) - cow.Height()/2
+	overlap := len(balloon) - cow.Height() + 3
 	height := len(balloon) + cow.Height()/2
 
 	buf := bytes.NewBuffer(make([]byte, 0, len(strings.Join(msg, ""))+cow.ArtSize))

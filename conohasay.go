@@ -8,9 +8,22 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+const (
+	horizontalOverlap = 3
+)
+
 // Conohasay generates and outputs the ballooned message with ASCII picture.
 func Conohasay(cow *Cow, msg Message, wrapcolumn int) (output string, err error) {
-	// calculate wrapsize
+	// Calculate wrapsize
+	if wrapcolumn <= 0 {
+		// Default wrapcolumn is detected from the terminal width.
+		// if it can't detect, we use 40 as default size.
+		wrapcolumn, _, err = terminal.GetSize(1)
+		if err != nil {
+			wrapcolumn = 40
+		}
+	}
+
 	lw := 0 // line width
 	for _, line := range msg {
 		l := runewidth.StringWidth(line)
@@ -33,13 +46,13 @@ func Conohasay(cow *Cow, msg Message, wrapcolumn int) (output string, err error)
 
 	w, _, _ := terminal.GetSize(1)
 	if w > wrapcolumn+cow.Width() {
-		return formatV(msg, cow, wrapcolumn), nil
+		return formatH(msg, cow, wrapcolumn), nil
 	}
-	return formatH(msg, cow, wrapcolumn), nil
+	return formatV(msg, cow, wrapcolumn), nil
 }
 
-// formatH generates the output with the horizontal layout.
-func formatH(msg Message, cow *Cow, wrapcolumn int) string {
+// formatV generates the output with the vertical layout.
+func formatV(msg Message, cow *Cow, wrapcolumn int) string {
 	balloon := balloonText(msg, wrapcolumn, "right")
 
 	buf := bytes.NewBuffer(make([]byte, 0, len(strings.Join(msg, ""))+cow.ArtSize))
@@ -50,11 +63,11 @@ func formatH(msg Message, cow *Cow, wrapcolumn int) string {
 	return buf.String()
 }
 
-// formatV generates the output with the vertical layout.
-func formatV(msg Message, cow *Cow, wrapcolumn int) string {
+// formatH generates the output with the horizontal layout.
+func formatH(msg Message, cow *Cow, wrapcolumn int) string {
 	balloon := balloonText(msg, wrapcolumn, "left")
 
-	overlap := len(balloon) - cow.Height() + 3
+	overlap := len(balloon) - cow.Height() + horizontalOverlap
 	buf := bytes.NewBuffer(make([]byte, 0, len(strings.Join(msg, ""))+cow.ArtSize))
 	mi := 0
 	ci := 0

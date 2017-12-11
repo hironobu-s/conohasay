@@ -44,7 +44,7 @@ func main() {
 		cli.IntFlag{
 			Name:  "wrapcolumn,W",
 			Usage: "Specifies roughly where the message should be wrapped",
-			Value: 80,
+			Value: 0,
 		},
 		cli.BoolFlag{
 			Name:  "l,list",
@@ -71,7 +71,7 @@ Usage: {{.Name}} [-flv] [-h] [-c name]
 		}
 
 		msg := strings.Split(buf.String(), "\n")
-		output, err := Conohasay(cow, msg, 50)
+		output, err := Conohasay(cow, msg, 0)
 		if err != nil {
 			fmt.Fprintf(os.Stdout, buf.String())
 			return

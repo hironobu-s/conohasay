@@ -94,7 +94,7 @@ func action(ctx *cli.Context) error {
 		return nil
 	}
 
-	name := ctx.String("mikumo")
+	name := ctx.String("character")
 	size := ctx.String("size")
 	if size != "s" && size != "m" && size != "l" {
 		return fmt.Errorf(`Parameter size should be "l", "m" or "s".\n`)

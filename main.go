@@ -111,7 +111,7 @@ func action(ctx *cli.Context) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stdout, output)
+	fmt.Fprint(os.Stdout, output)
 	return nil
 }
 

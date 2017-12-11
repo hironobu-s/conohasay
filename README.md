@@ -5,15 +5,19 @@
 
 **conohasay** は[cowsay](https://en.wikipedia.org/wiki/Cowsay)ライクなCLIツールです。ターミナル上で[ConoHa](https://www.conoha.jp/)のキャラクターが楽しくおしゃべりしますよ。
 
-
 ![conohasay](images/screen2.png)
 
 
-## Install
+## 動作環境
+
+動作環境はmacOSおよびLinux系OSです(Windowsは動作しません)。**ターミナルが256色表示をサポートしている必要があります。**
+
+
+## インストール
 
 以下の手順で実行ファイルをダウンロードしてください。以下のコマンドはカレントディレクトリにダウンロードしますが、使用頻度が高い場合はパスの通った場所に置いてください。
 
-**Mac OSX**
+**macOS**
 
 ```bash
 curl -sL https://github.com/hironobu-s/conohasay/releases/download/current/conohasay-osx.amd64.gz | zcat > conohasay && chmod +x ./conohasay
@@ -24,10 +28,6 @@ curl -sL https://github.com/hironobu-s/conohasay/releases/download/current/conoh
 ```bash
 curl -sL https://github.com/hironobu-s/conohasay/releases/download/current/conohasay-linux.amd64.gz | zcat > conohasay && chmod +x ./conohasay
 ```
-
-**Windows(amd64)**
-
-[ZIP file](https://github.com/hironobu-s/conohasay/releases/download/current/conohasay.amd64.zip)
 
 ## 使い方
 

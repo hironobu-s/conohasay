@@ -1,6 +1,6 @@
 # conohasay
 
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)[![Build Status](https://travis-ci.org/hironobu-s/conohasay.svg?branch=master)](https://travis-ci.org/hironobu-s/conohasay) [![codebeat badge](https://codebeat.co/badges/792c6579-ec06-4841-a6e2-d49df29c0640)](https://codebeat.co/projects/github-com-hironobu-s-conohasay)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE) [![Build Status](https://travis-ci.org/hironobu-s/conohasay.svg?branch=master)](https://travis-ci.org/hironobu-s/conohasay) [![codebeat badge](https://codebeat.co/badges/792c6579-ec06-4841-a6e2-d49df29c0640)](https://codebeat.co/projects/github-com-hironobu-s-conohasay)
 
 
 **conohasay** は[cowsay](https://en.wikipedia.org/wiki/Cowsay)ライクなCLIツールです。ターミナル上で[ConoHa](https://www.conoha.jp/)のキャラクターが楽しくおしゃべりしますよ。

@@ -3,50 +3,84 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
-	"strconv"
 	"strings"
+
+	"bytes"
 
 	"github.com/urfave/cli"
 )
 
-var newline = "\n"
-
-const (
-	DEFAULT_WRAPCOLUMN = 40
-)
+// Message is something given by user
+type Message []string
 
 func main() {
 	app := cli.NewApp()
-
 	app.Name = "conohasay"
-	app.Description = app.Name
+	app.Description = app.Name + " is a program that generates ASCII picture of ConoHa characters"
+	app.Version = "1.0"
+	app.Authors = []cli.Author{
+		cli.Author{
+			Name:  "Hironobu Saito",
+			Email: "hiro@hironobu.org",
+		},
+	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "mikumo,m",
-			Usage: "Specifies a particular character to use.",
+			Name:  "character,c",
+			Usage: "Specifies a particular character to use. You can also use -l option to get the list of characters",
 			Value: "conoha",
 		},
 		cli.StringFlag{
 			Name:  "size,s",
-			Usage: "Specifies a size of picture.",
+			Usage: `Specifies the size of the picture. The value should be "s", "m" or "l".`,
 			Value: "s",
 		},
 		cli.BoolFlag{
 			Name:  "force-vertical,f",
-			Usage: "Force the vertical layout.",
+			Usage: "Force the vertical layout",
 		},
 
 		cli.IntFlag{
-			Name:  "wrapcolumn, w",
-			Usage: "Specifies roughly where the message should be wrapped. Default is " + strconv.Itoa(DEFAULT_WRAPCOLUMN),
-			Value: DEFAULT_WRAPCOLUMN,
+			Name:  "wrapcolumn,W",
+			Usage: "Specifies roughly where the message should be wrapped",
+			Value: 80,
 		},
 		cli.BoolFlag{
-			Name:  "list,l",
-			Usage: "List all charaster names.",
+			Name:  "l,list",
+			Usage: "List characters",
 		},
 	}
+
+	// Setup the help writer
+	cli.AppHelpTemplate = `
+{{.Name}} version {{.Version}}
+Usage: {{.Name}} [-flv] [-h] [-c name]
+[-s size(s,m or l)] [-W wrapcolumn] [message]
+`
+	originalHelpPrinter := cli.HelpPrinter
+	cli.HelpPrinter = func(w io.Writer, templ string, d interface{}) {
+		app := d.(*cli.App)
+		buf := bytes.NewBuffer(make([]byte, 0, len(templ)*2))
+		originalHelpPrinter(buf, templ, app)
+
+		cow, err := loadCow("conoha", "s")
+		if err != nil {
+			fmt.Fprintf(os.Stdout, buf.String())
+			return
+		}
+
+		msg := strings.Split(buf.String(), "\n")
+		output, err := conohasay(cow, msg, 50)
+		if err != nil {
+			fmt.Fprintf(os.Stdout, buf.String())
+			return
+		}
+		fmt.Fprintf(os.Stdout, output)
+	}
+
+	// Run
 	app.Action = action
 	app.RunAndExitOnError()
 }

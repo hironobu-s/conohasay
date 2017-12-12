@@ -17,16 +17,25 @@
 
 以下の手順で実行ファイルをダウンロードしてください。以下のコマンドはカレントディレクトリにダウンロードしますが、使用頻度が高い場合はパスの通った場所に置いてください。
 
-**macOS**
+### macOS
 
 ```bash
 curl -sL https://github.com/hironobu-s/conohasay/releases/download/current/conohasay-osx.amd64.gz | zcat > conohasay && chmod +x ./conohasay
+./conohasay -h
 ```
 
-**Linux(amd64)**
+### Linux(amd64)
 
 ```bash
 curl -sL https://github.com/hironobu-s/conohasay/releases/download/current/conohasay-linux.amd64.gz | zcat > conohasay && chmod +x ./conohasay
+./conohasay -h
+```
+### Docker
+
+Dockerがインストールされているなら、下記コマンドですぐに試すことができます。
+
+```bash
+docker run -i hironobu/conohasay -h
 ```
 
 ## 使い方

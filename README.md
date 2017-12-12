@@ -34,7 +34,7 @@ curl -sL https://github.com/hironobu-s/conohasay/releases/download/current/conoh
 引数を渡すと、その文字列を表示します(標準入力から渡すこともできます)
 
 ```shell
-conohasay I'm ConoHa Mikumo! 
+conohasay "I'm ConoHa Mikumo!"
 ```
 
 ![conohasay](images/screen1.png)

@@ -8,7 +8,7 @@
 
 ## System requirements
 
-We support Linux and macOS platform. ** Your terminal should supporte 256 colors. **
+We support Linux and macOS platform. **Your terminal should support 256 colors.**
 
 ## Install
 

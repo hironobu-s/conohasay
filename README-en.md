@@ -73,7 +73,7 @@ Other options:
 * ``-W`` (wrapcolumn) Specifies roughly where the message should be wrapped
 * ``-f`` (force-vertical-layout) Force the vertical layout (Default is auto-detected as the terminal width)
 * ``-v`` Show version
-* ``-h`` Shoe help
+* ``-h`` Show help
 
 # License
 
